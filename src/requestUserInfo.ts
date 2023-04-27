@@ -6,7 +6,7 @@ import { AuthenticationRequest } from "./createAuthenticationRequest";
 import { UserInfoCIE, UserInfoSPID } from "./userInfo";
 import axios from "axios";
 
-export async function requestUserInfo(
+export async function requestUserInfo(        //    ID TOKEN REQUEST
   configuration: Configuration,
   authenticationRequest: AuthenticationRequest,
   access_token: string

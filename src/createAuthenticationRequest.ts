@@ -34,11 +34,11 @@ export async function createAuthenticationRequest(configuration: Configuration, 
   const { code_verifier, code_challenge, code_challenge_method } = getPKCE();
   const response_type = configuration.response_types[0];
   const client_id = configuration.client_id;
-  const iat = makeIat();
+  const iat = makeIat();      //     -----------   manca exp   --------------
   const aud = [provider, authorization_endpoint];
   const claims = configuration.providers[profile].requestedClaims;
   const iss = client_id;
-  const sub = client_id;
+  const sub = client_id;      //    --------------   manca ui_locales   --------
   const jwk = getPrivateJWKforProvider(configuration);
   const request = await createJWS(
     {
@@ -105,7 +105,7 @@ function getPKCE() {
 }
 
 export type AuthenticationRequest = {
-  /** authentication reqest unique identifier (generated radnomly by relying party) */
+  /** authentication request unique identifier (generated randomly by relying party) */
   state: string;
   /** generated randomly by relying party */
   code_verifier: string;

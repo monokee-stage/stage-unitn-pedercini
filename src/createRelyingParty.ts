@@ -133,12 +133,12 @@ export function createRelyingParty(configurationFacade: ConfigurationFacadeOptio
             });
             throw new Error(`authentication request not found for state ${query.state}`);
           }
-          const { id_token, access_token, refresh_token } = await requestAccessToken(
+          const { id_token, access_token, refresh_token } = await requestAccessToken(   // ACCESS TOKEN REQUEST
             configuration,
             authentication_request,
             query.code
           );
-          const user_info = await requestUserInfo(configuration, authentication_request, access_token);
+          const user_info = await requestUserInfo(configuration, authentication_request, access_token);     // ID TOKEN REQUEST
           const tokens: Tokens = {
             id_token,
             access_token,

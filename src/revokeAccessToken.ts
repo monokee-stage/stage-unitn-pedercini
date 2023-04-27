@@ -11,7 +11,7 @@ export type Tokens = Readonly<{
 
 export async function revokeAccessToken(configuration: Configuration, tokens: Tokens) {
   const request = {
-    url: tokens.revocation_endpoint,
+    url: tokens.revocation_endpoint,    // OP revocation endpoint got from provider configuration
     method: "POST" as const,
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({

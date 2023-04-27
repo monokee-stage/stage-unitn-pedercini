@@ -32,10 +32,10 @@ const port = process.env.PORT ?? 3000;
 const client_id = process.env.CLIENT_ID ?? `http://stage-pedercini.intranet.athesys.it:${port}/oidc/rp/`;
 const trust_anchors = process.env.TRUST_ANCHOR
   ? [process.env.TRUST_ANCHOR]
-  : ["http://127.0.0.1:8000/"];
+  : ["http://127.0.0.1:8000/", "http://stage-pedercini.intranet.athesys.it:8000/"];
 const identity_providers = process.env.IDENTITY_PROVIDER
   ? [process.env.IDENTITY_PROVIDER]
-  : ["http://127.0.0.1:8000/oidc/op/"];
+  : ["http://127.0.0.1:8000/oidc/op/", "http://stage-pedercini.intranet.athesys.it:8000/oidc/op/"];
 
 const relyingParty = createRelyingParty({
   client_id,
@@ -43,7 +43,7 @@ const relyingParty = createRelyingParty({
   trust_anchors,
   identity_providers: {
     spid: identity_providers,
-    cie: ["http://127.0.0.1:8002/oidc/op/"],
+    cie: ["http://127.0.0.1:8002/oidc/op/", "http://stage-pedercini.intranet.athesys.it:8002"],
   },
   public_jwks_path: "./public.jwks.json",
   private_jwks_path: "./private.jwks.json",
@@ -85,6 +85,7 @@ app.get("/oidc/rp/providers", async (req, res) => {
 //    Authorization Endpoint
 //    Performs Authentication of the user, redirecting the User-Agent to the Authorization Server's Authorization Endpoint
 //    using request parameters defined by OAuth 2.0 
+//    The Authorization Server endpoint / identity provider authenticates the user and redirect the user to the Redirect URI (Callback endpoint)
 
 app.get("/oidc/rp/authorization", async (req, res) => {
   try {
@@ -99,6 +100,7 @@ app.get("/oidc/rp/authorization", async (req, res) => {
 });
 
 //    Redirect URI   -   Authorization callback endpoint per l'acquisizione dell'auth code da parte del OP
+//    The user is redirected here by the OP after authentication (success or fail)
 
 app.get("/oidc/rp/callback", async (req, res) => {
   try {
@@ -107,7 +109,7 @@ app.get("/oidc/rp/callback", async (req, res) => {
       case "authentication-success": {
         req.session.user_info = outcome.user_info;
         req.session.tokens = outcome.tokens;
-        res.redirect(`/attributes`);
+        res.redirect(`/attributes`);        //    User redirected to the page requested / home page
         break;
       }
       case "authentication-error": {

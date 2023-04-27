@@ -36,17 +36,17 @@ const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 3000;
 const client_id = (_b = process.env.CLIENT_ID) !== null && _b !== void 0 ? _b : `http://stage-pedercini.intranet.athesys.it:${port}/oidc/rp/`;
 const trust_anchors = process.env.TRUST_ANCHOR
     ? [process.env.TRUST_ANCHOR]
-    : ["http://127.0.0.1:8000/"];
+    : ["http://127.0.0.1:8000/", "http://stage-pedercini.intranet.athesys.it:8000/"];
 const identity_providers = process.env.IDENTITY_PROVIDER
     ? [process.env.IDENTITY_PROVIDER]
-    : ["http://127.0.0.1:8000/oidc/op/"];
+    : ["http://127.0.0.1:8000/oidc/op/", "http://stage-pedercini.intranet.athesys.it:8000/oidc/op/"];
 const relyingParty = (0, createRelyingParty_1.createRelyingParty)({
     client_id,
     client_name: "My Project",
     trust_anchors,
     identity_providers: {
         spid: identity_providers,
-        cie: ["http://127.0.0.1:8002/oidc/op/"],
+        cie: ["http://127.0.0.1:8002/oidc/op/", "http://stage-pedercini.intranet.athesys.it:8002"],
     },
     public_jwks_path: "./public.jwks.json",
     private_jwks_path: "./private.jwks.json",

@@ -4,25 +4,25 @@ import { isUndefined } from "lodash";
 import { AuthenticationRequest } from "./createAuthenticationRequest";
 import axios from "axios";
 
-export async function requestAccessToken(
+export async function requestAccessToken(     ///  Guardare specifiche per Refresh Token
   configuration: Configuration,
   authenticationRequest: AuthenticationRequest,
   code: string
 ) {
   const request = {
-    url: authenticationRequest.token_endpoint,
+    url: authenticationRequest.token_endpoint,    //    OP Token endpoint got from provider configuration
     method: "POST" as const,
     headers: {
       "content-type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
       grant_type: "authorization_code",
-      redirect_uri: authenticationRequest.redirect_uri,
+      redirect_uri: authenticationRequest.redirect_uri,     //  RP redirect URI endpoint got from RP configuration
       client_id: configuration.client_id,
       state: authenticationRequest.state,
       code,
       code_verifier: authenticationRequest.code_verifier,
-      client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+      client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",     ///   Inconsistenza specifiche OIDC Core e Specifiche SPID (jwtbearer)
       client_assertion: await createJWS(
         {
           iss: configuration.client_id,
