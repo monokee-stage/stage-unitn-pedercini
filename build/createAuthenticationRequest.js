@@ -41,11 +41,11 @@ function createAuthenticationRequest(configuration, provider) {
         const { code_verifier, code_challenge, code_challenge_method } = getPKCE();
         const response_type = configuration.response_types[0];
         const client_id = configuration.client_id;
-        const iat = (0, utils_1.makeIat)();
+        const iat = (0, utils_1.makeIat)(); //     -----------   manca exp   --------------
         const aud = [provider, authorization_endpoint];
         const claims = configuration.providers[profile].requestedClaims;
         const iss = client_id;
-        const sub = client_id;
+        const sub = client_id; //    --------------   manca ui_locales   --------
         const jwk = (0, utils_1.getPrivateJWKforProvider)(configuration);
         const request = yield (0, utils_1.createJWS)({
             scope,

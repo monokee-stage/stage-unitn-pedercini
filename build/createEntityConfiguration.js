@@ -29,12 +29,18 @@ function createEntityConfiguration(configuration) {
         const contacts = configuration.contacts;
         const redirect_uris = configuration.redirect_uris;
         const response_types = configuration.response_types;
+        const federation_jwks = jwks; //  Can be taken from somewhere else
+        const organization_name = client_name;
+        const homepage_uri = configuration.homepage_uri;
+        const policy_uri = configuration.policy_uri;
+        const logo_uri = configuration.logo_uri;
+        const federation_resolve_endpoint = "local";
         const entity_configuration = {
             iat,
             exp,
             iss,
             sub,
-            jwks,
+            jwks: federation_jwks,
             metadata: {
                 openid_relying_party: {
                     application_type,
@@ -47,7 +53,15 @@ function createEntityConfiguration(configuration) {
                     redirect_uris,
                     response_types,
                     subject_type: "pairwise",
-                }, //    Aggiungere anche tipo federation_entity OBBLIGATORIO
+                },
+                federation_entity: {
+                    organization_name,
+                    homepage_uri,
+                    policy_uri,
+                    logo_uri,
+                    contacts,
+                    federation_resolve_endpoint
+                }
             },
             trust_marks,
             authority_hints,

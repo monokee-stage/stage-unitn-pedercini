@@ -39,7 +39,8 @@ exports.requestUserInfo = void 0;
 const jose = __importStar(require("jose"));
 const utils_1 = require("./utils");
 const axios_1 = __importDefault(require("axios"));
-function requestUserInfo(configuration, authenticationRequest, access_token) {
+function requestUserInfo(//    ID TOKEN REQUEST
+configuration, authenticationRequest, access_token) {
     return __awaiter(this, void 0, void 0, function* () {
         const request = {
             method: "GET",

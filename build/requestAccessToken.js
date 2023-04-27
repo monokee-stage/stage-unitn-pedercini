@@ -16,7 +16,8 @@ exports.requestAccessToken = void 0;
 const utils_1 = require("./utils");
 const lodash_1 = require("lodash");
 const axios_1 = __importDefault(require("axios"));
-function requestAccessToken(configuration, authenticationRequest, code) {
+function requestAccessToken(///  Guardare specifiche per Refresh Token
+configuration, authenticationRequest, code) {
     return __awaiter(this, void 0, void 0, function* () {
         const request = {
             url: authenticationRequest.token_endpoint,

@@ -50,6 +50,10 @@ const relyingParty = createRelyingParty({
   trust_marks_path: "./trust_marks.json",
   logger: createLogRotatingFilesystem(),
   auditLogger: createAuditLogRotatingFilesystem(),
+  homepage_uri: "http://homepage_uri.com",
+  policy_uri: "http://policy_uri.com",
+  logo_uri: "http://logo_uri.com",
+  federation_resolve_endpoint: "http://fed_resolve_endpoint.com",
   storage: createInMemoryAsyncStorage(),
 });
 

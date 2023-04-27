@@ -134,8 +134,9 @@ function createRelyingParty(configurationFacade) {
                             });
                             throw new Error(`authentication request not found for state ${query.state}`);
                         }
-                        const { id_token, access_token, refresh_token } = yield (0, requestAccessToken_1.requestAccessToken)(configuration, authentication_request, query.code);
-                        const user_info = yield (0, requestUserInfo_1.requestUserInfo)(configuration, authentication_request, access_token);
+                        const { id_token, access_token, refresh_token } = yield (0, requestAccessToken_1.requestAccessToken)(// ACCESS TOKEN REQUEST
+                        configuration, authentication_request, query.code);
+                        const user_info = yield (0, requestUserInfo_1.requestUserInfo)(configuration, authentication_request, access_token); // ID TOKEN REQUEST
                         const tokens = {
                             id_token,
                             access_token,

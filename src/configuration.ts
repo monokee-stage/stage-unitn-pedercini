@@ -125,6 +125,20 @@ export type Configuration = {
 
   /** a function that will be used to make http request to other parties */
   //httpClient: HttpClient;
+  //  ADDED
+
+  /** URL to a generic home page representing the Entity (the RP)  */
+  homepage_uri: string;
+
+  /** URL to the documentation of conditions and policies relevant to this Entity */
+  policy_uri: string;
+
+  /** URL that points to the logo of this Entity (the RP) */
+  logo_uri: string;
+
+  /** Resolve endpoint  */
+  federation_resolve_endpoint: string;
+
 };
 
 export type TrustMark = { id: string; trust_mark: string };
@@ -170,7 +184,7 @@ function defaultAuditLogger(message: any) {
 
 type MandatoryConfiguration = Pick<
   Configuration,
-  "client_id" | "client_name" | "trust_anchors" | "identity_providers" | "logger" | "auditLogger" | "storage"
+  "client_id" | "client_name" | "trust_anchors" | "identity_providers" | "logger" | "auditLogger" | "storage" | "homepage_uri" | "policy_uri" | "logo_uri" | "contacts" | "federation_resolve_endpoint"
 >;
 
 type AdditionalConfiguration = {
@@ -212,6 +226,10 @@ export async function createConfigurationFromConfigurationFacade({
   trust_marks_path,
   logger = consoleLogger,
   auditLogger = defaultAuditLogger,
+  homepage_uri,
+  policy_uri,
+  logo_uri,
+  federation_resolve_endpoint,
   ...rest
 }: ConfigurationFacadeOptions): Promise<Configuration> {
   if (public_jwks != null && public_jwks_path != null) {
@@ -298,6 +316,10 @@ export async function createConfigurationFromConfigurationFacade({
     redirect_uris: [client_id + "callback"],
     logger,
     auditLogger,
+    homepage_uri,
+    policy_uri,
+    logo_uri,
+    federation_resolve_endpoint,
     ...rest,
   };
 }

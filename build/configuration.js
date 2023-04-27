@@ -62,7 +62,7 @@ function defaultAuditLogger(message) {
  * @see {@link Configuration} fields for further customization
  */
 function createConfigurationFromConfigurationFacade(_a) {
-    var { client_id, client_name, trust_anchors, identity_providers, public_jwks, public_jwks_path, private_jwks, private_jwks_path, trust_marks, trust_marks_path, logger = consoleLogger_1.consoleLogger, auditLogger = defaultAuditLogger } = _a, rest = __rest(_a, ["client_id", "client_name", "trust_anchors", "identity_providers", "public_jwks", "public_jwks_path", "private_jwks", "private_jwks_path", "trust_marks", "trust_marks_path", "logger", "auditLogger"]);
+    var { client_id, client_name, trust_anchors, identity_providers, public_jwks, public_jwks_path, private_jwks, private_jwks_path, trust_marks, trust_marks_path, logger = consoleLogger_1.consoleLogger, auditLogger = defaultAuditLogger, homepage_uri, policy_uri, logo_uri, federation_resolve_endpoint } = _a, rest = __rest(_a, ["client_id", "client_name", "trust_anchors", "identity_providers", "public_jwks", "public_jwks_path", "private_jwks", "private_jwks_path", "trust_marks", "trust_marks_path", "logger", "auditLogger", "homepage_uri", "policy_uri", "logo_uri", "federation_resolve_endpoint"]);
     return __awaiter(this, void 0, void 0, function* () {
         if (public_jwks != null && public_jwks_path != null) {
             throw new Error(`Cannot use both 'public_jwks' and 'public_jwks_path' in the configuration`);
@@ -137,7 +137,11 @@ function createConfigurationFromConfigurationFacade(_a) {
             }, federation_default_exp: 48 * 60 * 60, public_jwks,
             private_jwks,
             trust_marks, redirect_uris: [client_id + "callback"], logger,
-            auditLogger }, rest);
+            auditLogger,
+            homepage_uri,
+            policy_uri,
+            logo_uri,
+            federation_resolve_endpoint }, rest);
     });
 }
 exports.createConfigurationFromConfigurationFacade = createConfigurationFromConfigurationFacade;

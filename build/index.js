@@ -53,6 +53,10 @@ const relyingParty = (0, createRelyingParty_1.createRelyingParty)({
     trust_marks_path: "./trust_marks.json",
     logger: (0, logRotatingFilesystem_1.createLogRotatingFilesystem)(),
     auditLogger: (0, auditLogRotatingFilesystem_1.createAuditLogRotatingFilesystem)(),
+    homepage_uri: "http://homepage_uri.com",
+    policy_uri: "http://policy_uri.com",
+    logo_uri: "http://logo_uri.com",
+    federation_resolve_endpoint: "http://fed_resolve_endpoint.com",
     storage: (0, inMemoryAsyncStorage_1.createInMemoryAsyncStorage)(),
 });
 relyingParty.validateConfiguration().catch((error) => {
@@ -74,6 +78,7 @@ app.get("/oidc/rp/providers", (req, res) => __awaiter(void 0, void 0, void 0, fu
 //    Authorization Endpoint
 //    Performs Authentication of the user, redirecting the User-Agent to the Authorization Server's Authorization Endpoint
 //    using request parameters defined by OAuth 2.0 
+//    The Authorization Server endpoint / identity provider authenticates the user and redirect the user to the Redirect URI (Callback endpoint)
 app.get("/oidc/rp/authorization", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         res.redirect(yield relyingParty.createAuthorizationRedirectURL(req.query.provider // auth request must have the parameter 'provider' 
@@ -84,6 +89,7 @@ app.get("/oidc/rp/authorization", (req, res) => __awaiter(void 0, void 0, void 0
     }
 }));
 //    Redirect URI   -   Authorization callback endpoint per l'acquisizione dell'auth code da parte del OP
+//    The user is redirected here by the OP after authentication (success or fail)
 app.get("/oidc/rp/callback", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _c;
     try {
@@ -92,7 +98,7 @@ app.get("/oidc/rp/callback", (req, res) => __awaiter(void 0, void 0, void 0, fun
             case "authentication-success": {
                 req.session.user_info = outcome.user_info;
                 req.session.tokens = outcome.tokens;
-                res.redirect(`/attributes`);
+                res.redirect(`/attributes`); //    User redirected to the page requested / home page
                 break;
             }
             case "authentication-error": {
