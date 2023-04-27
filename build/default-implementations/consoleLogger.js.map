@@ -1,0 +1,1 @@
+{"version":3,"file":"consoleLogger.js","sourceRoot":"","sources":["../../src/default-implementations/consoleLogger.ts"],"names":[],"mappings":";;;AAEa,QAAA,aAAa,GAAoB;IAC5C,KAAK,EAAE,OAAO,CAAC,KAAK;IACpB,KAAK,EAAE,OAAO,CAAC,KAAK;IACpB,IAAI,EAAE,OAAO,CAAC,IAAI;IAClB,KAAK,EAAE,OAAO,CAAC,KAAK;IACpB,IAAI,EAAE,OAAO,CAAC,IAAI;IAClB,KAAK,EAAE,OAAO,CAAC,KAAK;CACrB,CAAC"}
