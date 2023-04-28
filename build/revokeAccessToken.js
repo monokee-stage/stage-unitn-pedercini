@@ -32,7 +32,8 @@ function revokeAccessToken(configuration, tokens) {
                     iat: (0, utils_1.makeIat)(),
                     exp: (0, utils_1.makeExp)(),
                     jti: (0, utils_1.makeJti)(),
-                }, (0, utils_1.getPrivateJWKforProvider)(configuration)),
+                }, (0, utils_1.getPrivateJWKforProvider)(configuration) // get the RP private key (Core) to sign the revocation request
+                ),
             }).toString(),
         };
         configuration.logger.info({ message: `Revocation request`, request });

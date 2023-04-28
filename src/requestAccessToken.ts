@@ -32,7 +32,7 @@ export async function requestAccessToken(     ///  Guardare specifiche per Refre
           exp: makeExp(),
           jti: makeJti(),
         },
-        getPrivateJWKforProvider(configuration)
+        getPrivateJWKforProvider(configuration)   // get the RP private key (Core) to sign the Access Token request
       ),
     }).toString(),
   };

@@ -39,7 +39,7 @@ export async function createAuthenticationRequest(configuration: Configuration, 
   const claims = configuration.providers[profile].requestedClaims;
   const iss = client_id;
   const sub = client_id;      //    --------------   manca ui_locales   --------
-  const jwk = getPrivateJWKforProvider(configuration);
+  const jwk = getPrivateJWKforProvider(configuration);    //  get the RP private key (Core) to sign the Authentication Request
   const request = await createJWS(
     {
       scope,

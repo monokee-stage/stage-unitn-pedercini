@@ -11,6 +11,7 @@ import { revokeAccessToken, Tokens } from "./revokeAccessToken";
 import { getTrustChain } from "./getTrustChain";
 import { requestUserInfo } from "./requestUserInfo";
 import { isString, isUndefined } from "./utils";
+import { resolveSubject} from "./getTrustChain";
 
 export function createRelyingParty(configurationFacade: ConfigurationFacadeOptions) {
   let _configuration: Configuration | null = null;
@@ -159,6 +160,22 @@ export function createRelyingParty(configurationFacade: ConfigurationFacadeOptio
       const configuration = await setupConfiguration();
       try {
         return await revokeAccessToken(configuration, tokens);
+      } catch (error) {
+        configuration.logger.error(error);
+        throw error;
+      }
+    },
+
+    async resolveSubjectResponse(sub: string, anchor: string, type?: string){
+      const configuration = await setupConfiguration();
+      try {
+        const jws = await resolveSubject(configuration, sub, anchor, type);
+        const response = {
+          status: 200,
+          headers: {"Content-Type": "application/resolve-response+jwt"},
+          body: jws,
+        };
+        return response;
       } catch (error) {
         configuration.logger.error(error);
         throw error;

@@ -4,12 +4,12 @@ import * as jose from "jose";
 import * as uuid from "uuid";
 import * as undici from "undici";
 import Ajv from "ajv";
-import { Configuration, HttpClient, JWKs } from "./configuration";
+import { Configuration, JWKs } from "./configuration";
 
-export async function createJWS<Payload extends jose.JWTPayload>(payload: Payload, jwk: jose.JWK) {
+export async function createJWS<Payload extends jose.JWTPayload>(payload: Payload, jwk: jose.JWK, typ?: string) {
   const privateKey = await jose.importJWK(jwk, inferAlgForJWK(jwk));
   const jws = await new jose.CompactSign(new TextEncoder().encode(JSON.stringify(payload)))
-    .setProtectedHeader({ alg: "RS256", kid: jwk.kid })
+    .setProtectedHeader({ alg: "RS256", kid: jwk.kid, typ: typ})
     .sign(privateKey);
   return jws;
 }
@@ -43,6 +43,7 @@ export function generateRandomString(length: number) {
 }
 
 // SHOULDDO implement
+// Return the RP private key (Core) to use to sign protocol requests
 export function getPrivateJWKforProvider(configuration: Configuration) {
   return configuration.private_jwks.keys[0];
 }

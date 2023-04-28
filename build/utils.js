@@ -41,11 +41,11 @@ const fs = __importStar(require("fs"));
 const jose = __importStar(require("jose"));
 const uuid = __importStar(require("uuid"));
 const ajv_1 = __importDefault(require("ajv"));
-function createJWS(payload, jwk) {
+function createJWS(payload, jwk, typ) {
     return __awaiter(this, void 0, void 0, function* () {
         const privateKey = yield jose.importJWK(jwk, inferAlgForJWK(jwk));
         const jws = yield new jose.CompactSign(new TextEncoder().encode(JSON.stringify(payload)))
-            .setProtectedHeader({ alg: "RS256", kid: jwk.kid })
+            .setProtectedHeader({ alg: "RS256", kid: jwk.kid, typ: typ })
             .sign(privateKey);
         return jws;
     });
@@ -84,6 +84,7 @@ function generateRandomString(length) {
 }
 exports.generateRandomString = generateRandomString;
 // SHOULDDO implement
+// Return the RP private key (Core) to use to sign protocol requests
 function getPrivateJWKforProvider(configuration) {
     return configuration.private_jwks.keys[0];
 }

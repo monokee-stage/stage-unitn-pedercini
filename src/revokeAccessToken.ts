@@ -27,7 +27,7 @@ export async function revokeAccessToken(configuration: Configuration, tokens: To
           exp: makeExp(),
           jti: makeJti(),
         },
-        getPrivateJWKforProvider(configuration)
+        getPrivateJWKforProvider(configuration)   // get the RP private key (Core) to sign the revocation request
       ),
     }).toString(),
   };

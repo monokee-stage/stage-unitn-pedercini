@@ -46,7 +46,7 @@ function createAuthenticationRequest(configuration, provider) {
         const claims = configuration.providers[profile].requestedClaims;
         const iss = client_id;
         const sub = client_id; //    --------------   manca ui_locales   --------
-        const jwk = (0, utils_1.getPrivateJWKforProvider)(configuration);
+        const jwk = (0, utils_1.getPrivateJWKforProvider)(configuration); //  get the RP private key (Core) to sign the Authentication Request
         const request = yield (0, utils_1.createJWS)({
             scope,
             redirect_uri,

@@ -12,6 +12,7 @@ import { createAuditLogRotatingFilesystem } from "./default-implementations/audi
 import { createInMemoryAsyncStorage } from "./default-implementations/inMemoryAsyncStorage";
 import {UserInfo} from "./userInfo";
 import { Certificate } from "crypto";
+import { generateJWKS } from "./utils";
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -50,10 +51,12 @@ const relyingParty = createRelyingParty({
   trust_marks_path: "./trust_marks.json",
   logger: createLogRotatingFilesystem(),
   auditLogger: createAuditLogRotatingFilesystem(),
+  federation_public_jwks_path: "./federation.public.jwks.json",
+  federation_private_jwks_path: "./federation.private.jwks.json",
   homepage_uri: "http://homepage_uri.com",
   policy_uri: "http://policy_uri.com",
   logo_uri: "http://logo_uri.com",
-  federation_resolve_endpoint: "http://fed_resolve_endpoint.com",
+  federation_resolve_endpoint: client_id+"resolve",
   storage: createInMemoryAsyncStorage(),
 });
 
@@ -149,6 +152,25 @@ app.get("/oidc/rp/revocation", async (req, res) => {
   }
 });
 
+//    Resolve Entity Statement Endpoint 
+//    Responds with the final metadata, Trust marks and trust Chain of another Entity  ( RP gets a request from someone about for ex a OP)
+//    1. fetch subject's EC
+//    2. collect a TC from the subject EC to the specified TA
+//    3. Verify the Trust Chain
+//    4. Apply the policies present in the trust Chain to the ES metadata
+//    5. RETURN resolved metadata and verified Trust Marks (signed JWS ( Federation ), explicitly typed by setting typ header parameter to 'resolve-response+jwt')
+app.get("/oidc/rp/resolve", async (req, res) => {
+  try {
+    const response = await relyingParty.resolveSubjectResponse(req.query.sub as string, req.query.anchor as string, req.query.type as string);
+    res.status(response.status);
+    res.set("Content-Type", response.headers["Content-Type"]);
+    res.send(response.body);
+  } catch (error){
+    res.status(500).json(error);
+  }
+});
+
+
 
 //    Responds with the Entity Configuration base64encoded
 //    Entity Configuration Response: HTTP 200, Content-Type = 'application/entity-statement+jwt,
@@ -172,6 +194,19 @@ app.get("/oidc/rp/user_info", (req, res) => {
     res.json(req.session.user_info);
   } else {
     res.status(401).send("User is not logged in");
+  }
+});
+
+
+//  PROVA GENERAZIONE JWKS su file
+app.get("/oidc/rp/crea_chiave", async (req, res) => {
+  try {
+    const resp = await generateJWKS();
+    fs.writeFileSync("provajwks.json", JSON.stringify(resp.public_jwks));
+    fs.writeFileSync("provaprivatejwks.json", JSON.stringify(resp.private_jwks));
+    res.send("ciao");
+  } catch {
+    res.send("error");
   }
 });
 

@@ -1,5 +1,5 @@
 import * as jose from "jose";
-import { ajv, makeIat, verifyJWS } from "./utils";
+import { ajv, createJWS, makeIat, verifyJWS } from "./utils";
 import {
   TrustAnchorEntityConfiguration,
   IdentityProviderEntityConfiguration,
@@ -135,11 +135,13 @@ export async function getEntityConfiguration<T>(
       );
     }
     const entity_configuration = await verifyEntityConfiguration(jws);
-
+    
+    /*
     const valid = validateFunction(entity_configuration);
     if (!valid){
       console.log(validateFunction.errors);
     }
+    */
 
     if (!validateFunction(entity_configuration)) {
       throw new Error(`Malformed entity configuration`);
@@ -259,6 +261,92 @@ export async function getTrustChain(configuration: Configuration, provider: stri
     ).find((trust_chain) => trust_chain !== null) ?? null;
   return identityProviderTrustChain;
 }
+
+export async function resolveSubject(configuration: Configuration, sub: string, anchor: string, type?: string){
+  var sub_entity_configuration;
+  try {
+    sub_entity_configuration = await getEntityConfiguration(configuration, sub, validateRelyingPartyEntityConfiguration);
+  } catch (error){
+    try {
+      sub_entity_configuration = await getEntityConfiguration(configuration, sub, validateIdentityProviderEntityConfiguration);
+    } catch (error) {
+      throw new Error(`Failed to get entity configuration for ${sub} because of ${error}`);
+    }
+  }
+  const trust_anchor_entity_configuration = await getEntityConfiguration(configuration, anchor, validateTrustAnchorEntityConfiguration);
+
+  const sub_entity_statement = await getEntityStatement(configuration, sub_entity_configuration, trust_anchor_entity_configuration);
+  const now = makeIat();
+  if (sub_entity_statement.exp <= now){
+    throw new Error("No valid trust chain found - The Statement is not valid");
+  }
+
+  const metadata = applyMetadataPolicy(
+    sub_entity_configuration.metadata,
+    sub_entity_statement.metadata_policy
+  );
+  
+  const iss = configuration.client_id;
+  const iat = makeIat();
+  const exp = sub_entity_statement.exp;
+  const trust_marks = await verifyTrustMarks(configuration, sub_entity_configuration);
+
+  const resolve_response: ResolveResponse = {
+    iss,
+    sub,
+    iat,
+    exp,
+    metadata
+  }
+  if (trust_marks != null) {
+    resolve_response.trust_marks = trust_marks;
+  }
+  const jwk = configuration.federation_private_jwks.keys[0]; // CHIAVI federazione 
+  const jws = await createJWS(resolve_response, jwk, "resolve-response+jwt"); // sign with the federation private key and return
+  return jws;
+}
+
+export async function verifyTrustMarks(configuration: Configuration, sub_entity_configuration: IdentityProviderEntityConfiguration | RelyingPartyEntityConfiguration){
+  if (sub_entity_configuration.trust_marks != null){
+    try {
+      for (const trust_mark of sub_entity_configuration.trust_marks ){
+        const decoded: any = jose.decodeJwt(trust_mark.trust_mark);
+        
+        //  PROBLEM when the TM issuer is an intermediate ( how is the EC?)
+        const trust_mark_issuer_configuration = await getEntityConfiguration(configuration, decoded.iss, validateTrustAnchorEntityConfiguration);
+
+        const response = await axios({
+          method: 'post',
+          url: trust_mark_issuer_configuration.metadata.federation_entity.federation_trust_mark_status_endpoint,
+          data: {
+            trust_mark: trust_mark
+          }
+        });   //    ERROR 403 FORBIDDEN
+
+        if (response.status !== 200) {
+          throw new Error(`Expected status 200 but got ${response.status}`);
+        }
+        if (!response.headers["content-type"]?.startsWith("application/json")) {
+          throw new Error(
+            `Expected content-type application/json but got ${response.headers["content-type"]}`
+          );
+        }
+
+        if (response.data.active) {
+          return sub_entity_configuration.trust_marks;    /// Correggere: Così ritorno tutti i TM dopo averne trovato uno valido
+                                                          /// Fare Array dove aggiungo i TM validi
+        }
+      }
+    } catch (error) {
+      throw new Error(`Failed to validate Trust Marks because of ${error}`);
+    }
+  } else {
+    return null;
+  }
+}
+
+
+
 
 const jwksSchema: JSONSchemaType<JWKs> = {
   type: "object",
@@ -428,3 +516,15 @@ const trustAnchorEntityConfigurationSchema: JSONSchemaType<TrustAnchorEntityConf
   required: ["constraints", "exp", "iat", "iss", "jwks", "metadata", "sub", "trust_marks_issuers"],
 };
 const validateTrustAnchorEntityConfiguration = ajv.compile(trustAnchorEntityConfigurationSchema);
+
+export type ResolveResponse = {
+  iss: string;
+  sub: string;
+  iat: number;
+  exp: number;
+  metadata: {
+
+  };
+  trust_marks?: Array<{ id: string; trust_mark: string }>;
+  trust_chain?: Array<EntityStatement>;
+}

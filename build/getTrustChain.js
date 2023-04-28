@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrustChain = exports.verifyEntityConfiguration = exports.applyMetadataPolicy = exports.getEntityConfiguration = exports.getEntityStatement = void 0;
+exports.verifyTrustMarks = exports.resolveSubject = exports.getTrustChain = exports.verifyEntityConfiguration = exports.applyMetadataPolicy = exports.getEntityConfiguration = exports.getEntityStatement = void 0;
 const jose = __importStar(require("jose"));
 const utils_1 = require("./utils");
 const lodash_1 = require("lodash");
@@ -120,10 +120,12 @@ function getEntityConfiguration(configuration, url, validateFunction) {
                 throw new Error(`Expected content-type application/entity-statement+jwt but got ${response.headers["content-type"]}`);
             }
             const entity_configuration = yield verifyEntityConfiguration(jws);
+            /*
             const valid = validateFunction(entity_configuration);
-            if (!valid) {
-                console.log(validateFunction.errors);
+            if (!valid){
+              console.log(validateFunction.errors);
             }
+            */
             if (!validateFunction(entity_configuration)) {
                 throw new Error(`Malformed entity configuration`);
             }
@@ -219,6 +221,85 @@ function getTrustChain(configuration, provider) {
     });
 }
 exports.getTrustChain = getTrustChain;
+function resolveSubject(configuration, sub, anchor, type) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var sub_entity_configuration;
+        try {
+            sub_entity_configuration = yield getEntityConfiguration(configuration, sub, validateRelyingPartyEntityConfiguration);
+        }
+        catch (error) {
+            try {
+                sub_entity_configuration = yield getEntityConfiguration(configuration, sub, validateIdentityProviderEntityConfiguration);
+            }
+            catch (error) {
+                throw new Error(`Failed to get entity configuration for ${sub} because of ${error}`);
+            }
+        }
+        const trust_anchor_entity_configuration = yield getEntityConfiguration(configuration, anchor, validateTrustAnchorEntityConfiguration);
+        const sub_entity_statement = yield getEntityStatement(configuration, sub_entity_configuration, trust_anchor_entity_configuration);
+        const now = (0, utils_1.makeIat)();
+        if (sub_entity_statement.exp <= now) {
+            throw new Error("No valid trust chain found - The Statement is not valid");
+        }
+        const metadata = applyMetadataPolicy(sub_entity_configuration.metadata, sub_entity_statement.metadata_policy);
+        const iss = configuration.client_id;
+        const iat = (0, utils_1.makeIat)();
+        const exp = sub_entity_statement.exp;
+        const trust_marks = yield verifyTrustMarks(configuration, sub_entity_configuration);
+        const resolve_response = {
+            iss,
+            sub,
+            iat,
+            exp,
+            metadata
+        };
+        if (trust_marks != null) {
+            resolve_response.trust_marks = trust_marks;
+        }
+        const jwk = configuration.federation_private_jwks.keys[0]; // CHIAVI federazione 
+        const jws = yield (0, utils_1.createJWS)(resolve_response, jwk, "resolve-response+jwt"); // sign with the federation private key and return
+        return jws;
+    });
+}
+exports.resolveSubject = resolveSubject;
+function verifyTrustMarks(configuration, sub_entity_configuration) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        if (sub_entity_configuration.trust_marks != null) {
+            try {
+                for (const trust_mark of sub_entity_configuration.trust_marks) {
+                    const decoded = jose.decodeJwt(trust_mark.trust_mark);
+                    //  PROBLEM when the TM issuer is an intermediate ( how is the EC?)
+                    const trust_mark_issuer_configuration = yield getEntityConfiguration(configuration, decoded.iss, validateTrustAnchorEntityConfiguration);
+                    const response = yield (0, axios_1.default)({
+                        method: 'post',
+                        url: trust_mark_issuer_configuration.metadata.federation_entity.federation_trust_mark_status_endpoint,
+                        data: {
+                            trust_mark: trust_mark
+                        }
+                    }); //    ERROR 403 FORBIDDEN
+                    if (response.status !== 200) {
+                        throw new Error(`Expected status 200 but got ${response.status}`);
+                    }
+                    if (!((_a = response.headers["content-type"]) === null || _a === void 0 ? void 0 : _a.startsWith("application/json"))) {
+                        throw new Error(`Expected content-type application/json but got ${response.headers["content-type"]}`);
+                    }
+                    if (response.data.active) {
+                        return sub_entity_configuration.trust_marks; /// Correggere: Così ritorno tutti i TM dopo averne trovato uno valido
+                        /// Fare Array dove aggiungo i TM validi
+                    }
+                }
+            }
+            catch (error) {
+                throw new Error(`Failed to validate Trust Marks because of ${error}`);
+            }
+        }
+        else {
+            return null;
+        }
+    });
+}
+exports.verifyTrustMarks = verifyTrustMarks;
 const jwksSchema = {
     type: "object",
     properties: {

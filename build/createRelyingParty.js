@@ -18,6 +18,7 @@ const revokeAccessToken_1 = require("./revokeAccessToken");
 const getTrustChain_1 = require("./getTrustChain");
 const requestUserInfo_1 = require("./requestUserInfo");
 const utils_1 = require("./utils");
+const getTrustChain_2 = require("./getTrustChain");
 function createRelyingParty(configurationFacade) {
     let _configuration = null;
     function setupConfiguration() {
@@ -160,6 +161,24 @@ function createRelyingParty(configurationFacade) {
                 const configuration = yield setupConfiguration();
                 try {
                     return yield (0, revokeAccessToken_1.revokeAccessToken)(configuration, tokens);
+                }
+                catch (error) {
+                    configuration.logger.error(error);
+                    throw error;
+                }
+            });
+        },
+        resolveSubjectResponse(sub, anchor, type) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const configuration = yield setupConfiguration();
+                try {
+                    const jws = yield (0, getTrustChain_2.resolveSubject)(configuration, sub, anchor, type);
+                    const response = {
+                        status: 200,
+                        headers: { "Content-Type": "application/resolve-response+jwt" },
+                        body: jws,
+                    };
+                    return response;
                 }
                 catch (error) {
                     configuration.logger.error(error);

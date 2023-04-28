@@ -11,8 +11,6 @@ export async function createEntityConfiguration(configuration: Configuration) {
   const sub = configuration.client_id;
   const client_id = configuration.client_id;
   const authority_hints = configuration.trust_anchors;
-  // SHOULDDO use separate keys for core and federation
-  // use federation public jwks for federation related operations such as onboarding
   const jwks = configuration.public_jwks;
   const trust_marks = configuration.trust_marks;
   const client_name = configuration.client_name;
@@ -20,32 +18,41 @@ export async function createEntityConfiguration(configuration: Configuration) {
   const contacts = configuration.contacts;
   const redirect_uris = configuration.redirect_uris;
   const response_types = configuration.response_types;
-  const federation_jwks = jwks;   //  Can be taken from somewhere else
+  const federation_jwks = configuration.federation_public_jwks;   //  Can be taken from somewhere else
 
   const organization_name = client_name;
   const homepage_uri = configuration.homepage_uri;
   const policy_uri = configuration.policy_uri;
   const logo_uri = configuration.logo_uri;
-  const federation_resolve_endpoint = "local";
+  const federation_resolve_endpoint = configuration.federation_resolve_endpoint;
   const entity_configuration: RelyingPartyEntityConfiguration = {
     iat,
     exp,
     iss,
     sub,
-    jwks: federation_jwks,     ///   !!! has to be DIFFERENT from the one in metadata   ---->  NEED CHANGE
+    jwks: federation_jwks,
     metadata: {
       openid_relying_party: {   // Mancano dei parametri obbligatori da aggiungere
         application_type,
         client_id,
         client_registration_types: ["automatic"],
-        jwks,   //    !!!
+        jwks, 
         client_name,
         contacts,
         grant_types: ["refresh_token", "authorization_code"],
         redirect_uris,
         response_types,
         subject_type: "pairwise",
-      },    //    Aggiungere anche tipo federation_entity OBBLIGATORIO
+        /*
+        id_token_signed_response_alg,
+        id_token_encrypted_response_alg,
+        id_token_encrypted_response_enc,
+        userinfo_signed_response_alg,
+        userinfo_encypted_response_alg,
+        userinfo_encrypted_response_enc,
+        token_endpoint_auth_method
+        */
+      },
       federation_entity: {
         organization_name,
         homepage_uri,
@@ -58,8 +65,8 @@ export async function createEntityConfiguration(configuration: Configuration) {
     trust_marks,
     authority_hints,
   };
-  const jwk = configuration.private_jwks.keys[0]; // SHOULDDO make it configurable
-  const jws = await createJWS(entity_configuration, jwk); // sign with the federation private key and return
+  const jwk = configuration.federation_private_jwks.keys[0]; // CHIAVI federazione 
+  const jws = await createJWS(entity_configuration, jwk, "entity-statement+jwt"); // sign with the federation private key and return
   return jws;
 }
 
@@ -83,6 +90,15 @@ export type RelyingPartyEntityConfiguration = {
       redirect_uris: Array<string>;
       response_types: Array<string>;
       subject_type: string;
+      /*
+      id_token_signed_response_alg:       //    CHE tipo devo dare ????
+      id_token_encrypted_response_alg,
+      id_token_encrypted_response_enc,
+      userinfo_signed_response_alg,
+      userinfo_encypted_response_alg,
+      userinfo_encrypted_response_enc,
+      token_endpoint_auth_method
+      */
     },
     federation_entity: {      // ADDED
       organization_name: string;

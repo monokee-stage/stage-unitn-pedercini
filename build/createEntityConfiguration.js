@@ -29,12 +29,12 @@ function createEntityConfiguration(configuration) {
         const contacts = configuration.contacts;
         const redirect_uris = configuration.redirect_uris;
         const response_types = configuration.response_types;
-        const federation_jwks = jwks; //  Can be taken from somewhere else
+        const federation_jwks = configuration.federation_public_jwks; //  Can be taken from somewhere else
         const organization_name = client_name;
         const homepage_uri = configuration.homepage_uri;
         const policy_uri = configuration.policy_uri;
         const logo_uri = configuration.logo_uri;
-        const federation_resolve_endpoint = "local";
+        const federation_resolve_endpoint = configuration.federation_resolve_endpoint;
         const entity_configuration = {
             iat,
             exp,
@@ -66,8 +66,8 @@ function createEntityConfiguration(configuration) {
             trust_marks,
             authority_hints,
         };
-        const jwk = configuration.private_jwks.keys[0]; // SHOULDDO make it configurable
-        const jws = yield (0, utils_1.createJWS)(entity_configuration, jwk); // sign with the federation private key and return
+        const jwk = configuration.federation_private_jwks.keys[0]; // SHOULDDO make it configurable   // CHIAVI federazione 
+        const jws = yield (0, utils_1.createJWS)(entity_configuration, jwk, "entity-statement+jwt"); // sign with the federation private key and return
         return jws;
     });
 }

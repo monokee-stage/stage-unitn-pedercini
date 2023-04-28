@@ -62,7 +62,7 @@ function defaultAuditLogger(message) {
  * @see {@link Configuration} fields for further customization
  */
 function createConfigurationFromConfigurationFacade(_a) {
-    var { client_id, client_name, trust_anchors, identity_providers, public_jwks, public_jwks_path, private_jwks, private_jwks_path, trust_marks, trust_marks_path, logger = consoleLogger_1.consoleLogger, auditLogger = defaultAuditLogger, homepage_uri, policy_uri, logo_uri, federation_resolve_endpoint } = _a, rest = __rest(_a, ["client_id", "client_name", "trust_anchors", "identity_providers", "public_jwks", "public_jwks_path", "private_jwks", "private_jwks_path", "trust_marks", "trust_marks_path", "logger", "auditLogger", "homepage_uri", "policy_uri", "logo_uri", "federation_resolve_endpoint"]);
+    var { client_id, client_name, trust_anchors, identity_providers, public_jwks, public_jwks_path, private_jwks, private_jwks_path, trust_marks, trust_marks_path, logger = consoleLogger_1.consoleLogger, auditLogger = defaultAuditLogger, federation_public_jwks, federation_public_jwks_path, federation_private_jwks, federation_private_jwks_path, homepage_uri, policy_uri, logo_uri, federation_resolve_endpoint } = _a, rest = __rest(_a, ["client_id", "client_name", "trust_anchors", "identity_providers", "public_jwks", "public_jwks_path", "private_jwks", "private_jwks_path", "trust_marks", "trust_marks_path", "logger", "auditLogger", "federation_public_jwks", "federation_public_jwks_path", "federation_private_jwks", "federation_private_jwks_path", "homepage_uri", "policy_uri", "logo_uri", "federation_resolve_endpoint"]);
     return __awaiter(this, void 0, void 0, function* () {
         if (public_jwks != null && public_jwks_path != null) {
             throw new Error(`Cannot use both 'public_jwks' and 'public_jwks_path' in the configuration`);
@@ -84,6 +84,24 @@ function createConfigurationFromConfigurationFacade(_a) {
         }
         if ((public_jwks != null) !== (private_jwks != null)) {
             throw new Error(`You need to pass 'public_jwks' and 'private_jwks' together.`);
+        }
+        if (federation_public_jwks != null && federation_public_jwks_path != null) {
+            throw new Error(`Cannot use both 'federation_public_jwks' and 'federation_public_jwks_path' in the configuration`);
+        }
+        else if (federation_public_jwks_path != null) {
+            federation_public_jwks = yield (0, utils_1.readJSON)(federation_public_jwks_path);
+        }
+        if (federation_public_jwks == null) {
+            throw new Error(`You need to pass a 'federation_public_jwk' or 'federation_public_jwks_path' configuration`);
+        }
+        if (federation_private_jwks != null && federation_private_jwks_path != null) {
+            throw new Error(`Cannot use both 'federation_private_jwks' and 'federation_public_jwks_path' in the configuration`);
+        }
+        else if (federation_private_jwks_path != null) {
+            federation_private_jwks = yield (0, utils_1.readJSON)(federation_private_jwks_path);
+        }
+        if (federation_private_jwks == null) {
+            throw new Error(`You need to pass a 'federation_private_jwk' or 'federation_private_jwks_path' configuration`);
         }
         if (trust_marks != null && trust_marks_path != null) {
             throw new Error(`Cannot use both 'trust_marks' and 'trust_marks_path' in the configuration`);
@@ -138,6 +156,8 @@ function createConfigurationFromConfigurationFacade(_a) {
             private_jwks,
             trust_marks, redirect_uris: [client_id + "callback"], logger,
             auditLogger,
+            federation_public_jwks,
+            federation_private_jwks,
             homepage_uri,
             policy_uri,
             logo_uri,
@@ -190,6 +210,9 @@ function validateConfiguration(configuration) {
         if (configuration.private_jwks.keys.length !== configuration.public_jwks.keys.length) {
             throw new Error(`configuration: public_jwks and private_jwks must have the same length`);
         }
+        if (configuration.federation_private_jwks.keys.length !== configuration.federation_public_jwks.keys.length) {
+            throw new Error(`configuration: public_jwks and private_jwks must have the same length`);
+        }
         for (const public_jwk of configuration.public_jwks.keys) {
             try {
                 yield jose.importJWK(public_jwk, (0, utils_1.inferAlgForJWK)(public_jwk));
@@ -206,12 +229,36 @@ function validateConfiguration(configuration) {
                 throw new Error(`configuration: private_jwks must be a list of valid jwks ${JSON.stringify(private_jwk)}`);
             }
         }
+        for (const federation_public_jwk of configuration.federation_public_jwks.keys) {
+            try {
+                yield jose.importJWK(federation_public_jwk, (0, utils_1.inferAlgForJWK)(federation_public_jwk));
+            }
+            catch (error) {
+                throw new Error(`configuration: federation_public_jwks must be a list of valid jwks ${JSON.stringify(federation_public_jwk)}`);
+            }
+        }
+        for (const federation_private_jwk of configuration.federation_private_jwks.keys) {
+            try {
+                yield jose.importJWK(federation_private_jwk, (0, utils_1.inferAlgForJWK)(federation_private_jwk));
+            }
+            catch (error) {
+                throw new Error(`configuration: federation_private_jwks must be a list of valid jwks ${JSON.stringify(federation_private_jwk)}`);
+            }
+        }
         for (const public_jwk of configuration.public_jwks.keys) {
             if (!public_jwk.kid) {
                 throw new Error(`configuration: public_jwks must have a kid ${JSON.stringify(public_jwk)}`);
             }
             if (!configuration.private_jwks.keys.some((private_jwk) => private_jwk.kid === public_jwk.kid)) {
                 throw new Error(`configuration: public_jwks and private_jwks must have mtching kid ${JSON.stringify(public_jwk)}`);
+            }
+        }
+        for (const federation_public_jwk of configuration.federation_public_jwks.keys) {
+            if (!federation_public_jwk.kid) {
+                throw new Error(`configuration: federation_public_jwks must have a kid ${JSON.stringify(federation_public_jwk)}`);
+            }
+            if (!configuration.federation_private_jwks.keys.some((federation_private_jwk) => federation_private_jwk.kid === federation_public_jwk.kid)) {
+                throw new Error(`configuration: federation_public_jwks and federation_private_jwks must have mtching kid ${JSON.stringify(federation_public_jwk)}`);
             }
         }
         if (typeof configuration.logger !== "object") {
