@@ -308,6 +308,7 @@ export async function resolveSubject(configuration: Configuration, sub: string, 
     const iss = configuration.client_id;
     const iat = makeIat();
     const exp = cached.exp
+    //const exp = 654654;
     const metadata = sub_entity_configuration.metadata;
     const trust_marks = await verifyTrustMarks(configuration, sub_entity_configuration);
 
@@ -333,47 +334,51 @@ export async function resolveSubject(configuration: Configuration, sub: string, 
 
 export async function verifyTrustMarks(configuration: Configuration, sub_entity_configuration: IdentityProviderEntityConfiguration | RelyingPartyEntityConfiguration){
   if (sub_entity_configuration.trust_marks != null){
-    try {
-      for (const trust_mark of sub_entity_configuration.trust_marks ){
-        const decoded: any = jose.decodeJwt(trust_mark.trust_mark);
+    const val: TrustMark[] = [];
+    for (const trust_mark of sub_entity_configuration.trust_marks ){
+      try {
+          const decoded: any = jose.decodeJwt(trust_mark.trust_mark);
 
-        const trust_mark_issuer_configuration = await getEntityConfiguration(configuration, decoded.iss, validateTrustAnchorEntityConfiguration);
+          const trust_mark_issuer_configuration = await getEntityConfiguration(configuration, decoded.iss, validateTrustAnchorEntityConfiguration);
 
-        const response = await axios({
-          method: 'post',
-          url: trust_mark_issuer_configuration.metadata.federation_entity.federation_trust_mark_status_endpoint,
-          //url: "http://stage-pedercini.intranet.athesys.it:3000/try",
-          data: {
-            trust_mark: trust_mark.trust_mark,
-            },
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            //"X-CSRFTOKEN": "PcyIsOUHkx8n78dPr58Is5ZkAodJZiS9",
-            "X-CSRFTOKEN": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            //"cookie": "csrftoken=PcyIsOUHkx8n78dPr58Is5ZkAodJZiS9",
-            "cookie": "csrftoken=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          const response = await axios({
+            method: 'post',
+            url: trust_mark_issuer_configuration.metadata.federation_entity.federation_trust_mark_status_endpoint,
+            //url: "http://stage-pedercini.intranet.athesys.it:3000/try",
+            data: {
+              trust_mark: trust_mark.trust_mark,
+              },
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              //"X-CSRFTOKEN": "PcyIsOUHkx8n78dPr58Is5ZkAodJZiS9",
+              "X-CSRFTOKEN": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              //"cookie": "csrftoken=PcyIsOUHkx8n78dPr58Is5ZkAodJZiS9",
+              "cookie": "csrftoken=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          });   //    ERROR 403 FORBIDDEN without csrf token   ---->   which token shall I insert ?? Here I took the Postman one
+
+          if (response.status !== 200) {
+            throw new Error(`Expected status 200 but got ${response.status}`);
           }
-        });   //    ERROR 403 FORBIDDEN without csrf token   ---->   which token shall I insert ?? Here I took the Postman one
+          if (!response.headers["content-type"]?.startsWith("application/json")) {
+            throw new Error(
+              `Expected content-type application/json but got ${response.headers["content-type"]}`
+            );
+          }
 
-        if (response.status !== 200) {
-          throw new Error(`Expected status 200 but got ${response.status}`);
-        }
-        if (!response.headers["content-type"]?.startsWith("application/json")) {
-          throw new Error(
-            `Expected content-type application/json but got ${response.headers["content-type"]}`
-          );
-        }
-
-        // Inviando trust_mark restituisce false perchè i trust_mark sono malformati, ma è corretto
-        // id "esterno" del trust_mark e id "interno" devono essere uguali ma non lo sono
-        if (response.data.active) {
-          return sub_entity_configuration.trust_marks;    /// Correggere: Così ritorno tutti i TM dopo averne trovato uno valido
-                                                          /// Fare Array dove aggiungo i TM validi
-        }
+          // Inviando trust_mark restituisce false perchè i trust_mark sono malformati, ma è corretto
+          // id "esterno" del trust_mark e id "interno" devono essere uguali ma non lo sono
+          if (!response.data.active) {
+            //return sub_entity_configuration.trust_marks;    /// Correggere: Così ritorno tutti i TM dopo averne trovato uno valido
+                                                            /// Fare Array dove aggiungo i TM validi
+            val[val.length] = trust_mark;
+          }
+      } catch (error) {
+        throw new Error(`Failed to validate Trust Mark because of ${error}`);
       }
-    } catch (error) {
-      throw new Error(`Failed to validate Trust Marks because of ${error}`);
     }
+    return val;
+
   } else {
     return null;
   }

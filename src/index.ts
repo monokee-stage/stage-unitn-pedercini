@@ -44,7 +44,7 @@ const relyingParty = createRelyingParty({
   trust_anchors,
   identity_providers: {
     spid: identity_providers,
-    cie: ["http://127.0.0.1:8002/oidc/op/", "http://stage-pedercini.intranet.athesys.it:8002"],
+    cie: ["http://127.0.0.1:8002/oidc/op/", "http://stage-pedercini.intranet.athesys.it:8002/oidc/op/"],
   },
   public_jwks_path: "./public.jwks.json",
   private_jwks_path: "./private.jwks.json",
