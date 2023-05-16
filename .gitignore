@@ -70,4 +70,5 @@ private.jwks.json
 public.jwks.json
 federation.public.jwks.json
 federation.private.jwks.json
+trust_marks.json
 node_modules/
