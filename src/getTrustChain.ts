@@ -9,7 +9,7 @@ import { cloneDeep, difference } from "lodash";
 import { Configuration, JWKs, TrustMark } from "./configuration";
 import { JSONSchemaType, ValidateFunction } from "ajv";
 import axios from "axios";
-import { error } from "console";
+import { assert, error } from "console";
 import { stringify } from "querystring";
 
 // SHOULDDO implement arbitray length tst chain validation
@@ -263,6 +263,10 @@ export async function getTrustChain(configuration: Configuration, provider: stri
 }
 
 export async function resolveSubject(configuration: Configuration, sub: string, anchor: string, type?: string){
+
+
+  //   ------   METADATA DISCOVERY   ------  (in teoria non deve essere utilizzato a ogni Resolve Request)
+  /*
   var sub_entity_configuration;
   try {
     sub_entity_configuration = await getEntityConfiguration(configuration, sub, validateRelyingPartyEntityConfiguration);
@@ -285,25 +289,46 @@ export async function resolveSubject(configuration: Configuration, sub: string, 
     sub_entity_configuration.metadata,
     sub_entity_statement.metadata_policy
   );
-  
-  const iss = configuration.client_id;
-  const iat = makeIat();
-  const exp = sub_entity_statement.exp;
-  const trust_marks = await verifyTrustMarks(configuration, sub_entity_configuration);
+  */
 
-  const resolve_response: ResolveResponse = {
-    iss,
-    sub,
-    iat,
-    exp,
-    metadata
+  //    ------ NO METADATA DISCOVERY -> CachedTrustChain      ---------
+  try {
+    
+    const cacheKey = `${configuration.client_id}-${sub}-${anchor}`;
+    const cached = trustChainCache.get(cacheKey);
+    const now = makeIat();
+    if (!(cached && cached.exp > now)) {   //  IF i found an existing TC and is valid
+      throw new Error("Subject not known: Trust Chain about the sub not in cache");
+    }
+    const sub_entity_configuration = cached.entity_configuration;
+
+    
+      // Dinamic Verify Trust Marks
+    
+    const iss = configuration.client_id;
+    const iat = makeIat();
+    const exp = cached.exp
+    const metadata = sub_entity_configuration.metadata;
+    const trust_marks = await verifyTrustMarks(configuration, sub_entity_configuration);
+
+    const resolve_response: ResolveResponse = {
+      iss,
+      sub,
+      iat,
+      exp,
+      metadata
+    }
+    if (trust_marks != null) {
+      resolve_response.trust_marks = trust_marks;
+    }
+    const jwk = configuration.federation_private_jwks.keys[0]; // CHIAVI federazione 
+    const jws = await createJWS(resolve_response, jwk, "resolve-response+jwt"); // sign with the federation private key and return
+    return jws;
+
+  } catch (error) {
+    configuration.logger.warn(error);
+    throw new Error(`Failed to resolve the subject ${sub} because of ${error}`);
   }
-  if (trust_marks != null) {
-    resolve_response.trust_marks = trust_marks;
-  }
-  const jwk = configuration.federation_private_jwks.keys[0]; // CHIAVI federazione 
-  const jws = await createJWS(resolve_response, jwk, "resolve-response+jwt"); // sign with the federation private key and return
-  return jws;
 }
 
 export async function verifyTrustMarks(configuration: Configuration, sub_entity_configuration: IdentityProviderEntityConfiguration | RelyingPartyEntityConfiguration){
@@ -311,17 +336,24 @@ export async function verifyTrustMarks(configuration: Configuration, sub_entity_
     try {
       for (const trust_mark of sub_entity_configuration.trust_marks ){
         const decoded: any = jose.decodeJwt(trust_mark.trust_mark);
-        
-        //  PROBLEM when the TM issuer is an intermediate ( how is the EC?)
+
         const trust_mark_issuer_configuration = await getEntityConfiguration(configuration, decoded.iss, validateTrustAnchorEntityConfiguration);
 
         const response = await axios({
           method: 'post',
           url: trust_mark_issuer_configuration.metadata.federation_entity.federation_trust_mark_status_endpoint,
+          //url: "http://stage-pedercini.intranet.athesys.it:3000/try",
           data: {
-            trust_mark: trust_mark
+            trust_mark: trust_mark.trust_mark,
+            },
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            //"X-CSRFTOKEN": "PcyIsOUHkx8n78dPr58Is5ZkAodJZiS9",
+            "X-CSRFTOKEN": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            //"cookie": "csrftoken=PcyIsOUHkx8n78dPr58Is5ZkAodJZiS9",
+            "cookie": "csrftoken=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
           }
-        });   //    ERROR 403 FORBIDDEN
+        });   //    ERROR 403 FORBIDDEN without csrf token   ---->   which token shall I insert ?? Here I took the Postman one
 
         if (response.status !== 200) {
           throw new Error(`Expected status 200 but got ${response.status}`);
@@ -332,6 +364,8 @@ export async function verifyTrustMarks(configuration: Configuration, sub_entity_
           );
         }
 
+        // Inviando trust_mark restituisce false perchè i trust_mark sono malformati, ma è corretto
+        // id "esterno" del trust_mark e id "interno" devono essere uguali ma non lo sono
         if (response.data.active) {
           return sub_entity_configuration.trust_marks;    /// Correggere: Così ritorno tutti i TM dopo averne trovato uno valido
                                                           /// Fare Array dove aggiungo i TM validi

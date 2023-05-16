@@ -15,13 +15,13 @@ export async function requestAccessToken(     ///  Guardare specifiche per Refre
     headers: {
       "content-type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({
+    data: new URLSearchParams({
       grant_type: "authorization_code",
       redirect_uri: authenticationRequest.redirect_uri,     //  RP redirect URI endpoint got from RP configuration
       client_id: configuration.client_id,
       state: authenticationRequest.state,
       code,
-      code_verifier: authenticationRequest.code_verifier,
+      code_verifier: authenticationRequest.code_verifier,   // include the PKCE code_verifier in the Access Token request
       client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",     ///   Inconsistenza specifiche OIDC Core e Specifiche SPID (jwtbearer)
       client_assertion: await createJWS(
         {
@@ -44,7 +44,8 @@ export async function requestAccessToken(     ///  Guardare specifiche per Refre
 
   if (response.status === 200) {
     configuration.logger.info({ message: "Access token request succeeded", request, response });
-    const tokens = JSON.parse(response.data);
+    const tokens = JSON.parse(JSON.stringify(response.data));
+    //const tokens = response.data;
     if (
       !isString(tokens.access_token) ||
       !isString(tokens.id_token) ||

@@ -76,17 +76,16 @@ declare module "express-session" {
 }
 
 
+
 //    Restituisce array di providers conosciuti (con cui ho una Trust Chain) e le loro informazioni (sub, organization_name, logo_uri)
 // FUNZIONA OK
 
 app.get("/oidc/rp/providers", async (req, res) => {
-  
   try {
     res.json(await relyingParty.retrieveAvailableProviders());
   } catch (error) {
     res.status(500).json(error);
   }
-  
 });
 
 //    Authorization Endpoint
@@ -117,7 +116,7 @@ app.get("/oidc/rp/callback", async (req, res) => {
         req.session.user_info = outcome.user_info;
         req.session.tokens = outcome.tokens;
         res.redirect(`/attributes`);        //    User redirected to the page requested / home page
-        break;
+        break;                              //    Cosa ci voglio fare con questi dati???
       }
       case "authentication-error": {
         res.redirect(
@@ -166,9 +165,21 @@ app.get("/oidc/rp/resolve", async (req, res) => {
     res.set("Content-Type", response.headers["Content-Type"]);
     res.send(response.body);
   } catch (error){
-    res.status(500).json(error);
+    if (error instanceof Error){
+      const errMessage = {
+        "error": "server_error",
+        "error_decription": error.message
+      };
+      res.status(500).json(errMessage);
+    } else {
+      res.status(500).json(error);
+    }
   }
 });
+
+app.post("/try", async (req, res) => {
+  res.send("ciao");
+})
 
 
 
@@ -211,12 +222,12 @@ app.get("/oidc/rp/crea_chiave", async (req, res) => {
 });
 
 // serve frontend static files
-//app.use(express.static("frontend/build"));
-app.use(express.static("frontend/"));
+//app.use(express.static("../frontendOriginale/build"));
+app.use(express.static("frontend/build"));
 // every route leads back to index beacuse it is a single page application
 app.get("*", (req, res) =>
-  //res.sendFile(path.resolve("frontend/build/index.html"))
-  res.sendFile(path.resolve("frontend/index.html"))
+  //res.sendFile(path.resolve("../frontendOriginale/build/index.html"))
+  res.sendFile(path.resolve("frontend/build/index.html"))
 );
 
 

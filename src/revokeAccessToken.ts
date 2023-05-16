@@ -14,7 +14,7 @@ export async function revokeAccessToken(configuration: Configuration, tokens: To
     url: tokens.revocation_endpoint,    // OP revocation endpoint got from provider configuration
     method: "POST" as const,
     headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
+    data: new URLSearchParams({
       token: tokens.access_token,
       client_id: configuration.client_id,
       client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
