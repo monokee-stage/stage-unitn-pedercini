@@ -265,11 +265,11 @@ app.get("/oidc/rp/crea_chiave", async (req, res) => {
 
 // serve frontend static files
 //app.use(express.static("../frontendOriginale/build"));
-app.use(express.static("frontend/build"));
+app.use(express.static("frontend/src"));
 // every route leads back to index beacuse it is a single page application
 app.get("*", (req, res) =>
   //res.sendFile(path.resolve("../frontendOriginale/build/index.html"))
-  res.sendFile(path.resolve("frontend/build/index.html"))
+  res.sendFile(path.resolve("frontend/src/index.html"))
 );
 
 
