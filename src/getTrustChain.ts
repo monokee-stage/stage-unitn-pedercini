@@ -429,6 +429,7 @@ const relyingPartyEntityConfigurationSchema: JSONSchemaType<RelyingPartyEntityCo
           type: "object",
           properties: {
             client_name: { type: "string" },
+            organization_name: { type: "string"},
             client_id: { type: "string" },
             application_type: { type: "string" },
             contacts: { type: "array", items: { type: "string" }, nullable: true },

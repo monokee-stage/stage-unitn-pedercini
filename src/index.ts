@@ -40,7 +40,8 @@ const identity_providers = process.env.IDENTITY_PROVIDER
 
 const relyingParty = createRelyingParty({
   client_id,
-  client_name: "My Project",
+  client_name: "My Project RP",
+  organization_name: "My Project RP",
   trust_anchors,
   identity_providers: {
     spid: identity_providers,

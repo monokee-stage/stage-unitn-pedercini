@@ -46,6 +46,7 @@ export async function createEntityConfiguration(configuration: Configuration) {
         client_registration_types: ["automatic"],
         jwks, 
         client_name,
+        organization_name,
         contacts,
         grant_types: ["refresh_token", "authorization_code"],
         redirect_uris,
@@ -93,6 +94,7 @@ export type RelyingPartyEntityConfiguration = {
       client_registration_types: Array<string>;
       jwks: { keys: Array<jose.JWK> };
       client_name: string;
+      organization_name: string;
       contacts?: Array<string>;
       grant_types: Array<string>;
       redirect_uris: Array<string>;

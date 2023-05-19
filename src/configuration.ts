@@ -23,6 +23,12 @@ export type Configuration = {
   client_name: string;
 
   /**
+   * Human-readable name of this application
+   */
+
+  organization_name: string;
+
+  /**
    * urls that identifies trust anchors
    *
    * @example ["https://registry.spid.gov.it/"]
@@ -188,7 +194,7 @@ function defaultAuditLogger(message: any) {
 
 type MandatoryConfiguration = Pick<
   Configuration,
-  "client_id" | "client_name" | "trust_anchors" | "identity_providers" | "logger" | "auditLogger" | "storage" | "homepage_uri" | "policy_uri" | "logo_uri" | "contacts" | "federation_resolve_endpoint"
+  "client_id" | "client_name" | "organization_name" | "trust_anchors" | "identity_providers" | "logger" | "auditLogger" | "storage" | "homepage_uri" | "policy_uri" | "logo_uri" | "contacts" | "federation_resolve_endpoint"
 >;
 
 type AdditionalConfiguration = {
@@ -226,6 +232,7 @@ export type ConfigurationFacadeOptions = MandatoryConfiguration & Partial<Config
 export async function createConfigurationFromConfigurationFacade({
   client_id,
   client_name,
+  organization_name,
   trust_anchors,
   identity_providers,
   public_jwks,
@@ -309,6 +316,7 @@ export async function createConfigurationFromConfigurationFacade({
   return {
     client_id,
     client_name,
+    organization_name,
     trust_anchors,
     identity_providers,
 
