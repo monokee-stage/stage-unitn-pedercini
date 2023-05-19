@@ -20,6 +20,14 @@ export async function createEntityConfiguration(configuration: Configuration) {
   const response_types = configuration.response_types;
   const federation_jwks = configuration.federation_public_jwks;   //  Can be taken from somewhere else
 
+  const id_token_signed_response_alg = ["RS256"];
+  const id_token_encrypted_response_alg = ["RSA-OAEP-256"];
+  const id_token_encrypted_response_enc = ["A128CBC-HS256"];
+  const userinfo_signed_response_alg = ["RS256"];
+  const userinfo_encrypted_response_alg = ["RSA-OAEP-256"];
+  const userinfo_encrypted_response_enc = ["A128CBC-HS256"];
+  const token_endpoint_auth_method = ["private_key_jwt"];
+
   const organization_name = client_name;
   const homepage_uri = configuration.homepage_uri;
   const policy_uri = configuration.policy_uri;
@@ -43,15 +51,15 @@ export async function createEntityConfiguration(configuration: Configuration) {
         redirect_uris,
         response_types,
         subject_type: "pairwise",
-        /*
+        
         id_token_signed_response_alg,
         id_token_encrypted_response_alg,
         id_token_encrypted_response_enc,
         userinfo_signed_response_alg,
-        userinfo_encypted_response_alg,
+        userinfo_encrypted_response_alg,
         userinfo_encrypted_response_enc,
         token_endpoint_auth_method
-        */
+        
       },
       federation_entity: {
         organization_name,
@@ -90,15 +98,15 @@ export type RelyingPartyEntityConfiguration = {
       redirect_uris: Array<string>;
       response_types: Array<string>;
       subject_type: string;
-      /*
-      id_token_signed_response_alg:       //    CHE tipo devo dare ????
-      id_token_encrypted_response_alg,
-      id_token_encrypted_response_enc,
-      userinfo_signed_response_alg,
-      userinfo_encypted_response_alg,
-      userinfo_encrypted_response_enc,
-      token_endpoint_auth_method
-      */
+      
+      id_token_signed_response_alg: Array<string>;    //    CHE tipo devo dare ????   SONO TUTTE ARRAY STRING
+      id_token_encrypted_response_alg: Array<string>;
+      id_token_encrypted_response_enc: Array<string>;
+      userinfo_signed_response_alg: Array<string>;
+      userinfo_encrypted_response_alg: Array<string>;
+      userinfo_encrypted_response_enc: Array<string>;
+      token_endpoint_auth_method: Array<string>;
+      
     },
     federation_entity: {      // ADDED
       organization_name: string;

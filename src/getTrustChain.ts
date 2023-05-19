@@ -87,7 +87,7 @@ export async function getEntityStatement(
   superior: TrustAnchorEntityConfiguration
 ): Promise<EntityStatement> {
   try {
-    let url = superior.metadata.federation_entity.federation_fetch_endpoint;
+    const url = superior.metadata.federation_entity.federation_fetch_endpoint;
     //const response = await axios.get(url);
 
     /*
@@ -438,6 +438,15 @@ const relyingPartyEntityConfigurationSchema: JSONSchemaType<RelyingPartyEntityCo
             response_types: { type: "array", items: { type: "string" } },
             redirect_uris: { type: "array", items: { type: "string" } },
             client_registration_types: { type: "array", items: { type: "string" } },
+
+            id_token_signed_response_alg: { type: "array", items: { type: "string" } },
+            id_token_encrypted_response_alg: { type: "array", items: { type: "string" } },
+            id_token_encrypted_response_enc: { type: "array", items: { type: "string" } },
+            userinfo_signed_response_alg: { type: "array", items: { type: "string" } },
+            userinfo_encrypted_response_alg: { type: "array", items: { type: "string" } },
+            userinfo_encrypted_response_enc: { type: "array", items: { type: "string" } },
+            token_endpoint_auth_method: { type: "array", items: { type: "string" } },
+
           },
           required: [
             "client_name",
@@ -449,6 +458,15 @@ const relyingPartyEntityConfigurationSchema: JSONSchemaType<RelyingPartyEntityCo
             "response_types",
             "redirect_uris",
             "client_registration_types",
+
+            "id_token_signed_response_alg",
+            "id_token_encrypted_response_alg",
+            "id_token_encrypted_response_enc",
+            "userinfo_signed_response_alg",
+            "userinfo_encrypted_response_alg",
+            "userinfo_encrypted_response_enc",
+            "token_endpoint_auth_method",
+
           ],
         },
         federation_entity: {

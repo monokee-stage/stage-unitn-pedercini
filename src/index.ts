@@ -33,10 +33,10 @@ const port = process.env.PORT ?? 3000;
 const client_id = process.env.CLIENT_ID ?? `http://stage-pedercini.intranet.athesys.it:${port}/oidc/rp/`;
 const trust_anchors = process.env.TRUST_ANCHOR
   ? [process.env.TRUST_ANCHOR]
-  : ["http://127.0.0.1:8000/", "http://stage-pedercini.intranet.athesys.it:8000/"];
+  : ["http://stage-pedercini.intranet.athesys.it:8000/", "http://127.0.0.1:8000/"];
 const identity_providers = process.env.IDENTITY_PROVIDER
   ? [process.env.IDENTITY_PROVIDER]
-  : ["http://127.0.0.1:8000/oidc/op/", "http://stage-pedercini.intranet.athesys.it:8000/oidc/op/"];
+  : ["http://stage-pedercini.intranet.athesys.it:8000/oidc/op/", "http://127.0.0.1:8000/oidc/op/"]; 
 
 const relyingParty = createRelyingParty({
   client_id,
@@ -44,7 +44,7 @@ const relyingParty = createRelyingParty({
   trust_anchors,
   identity_providers: {
     spid: identity_providers,
-    cie: ["http://127.0.0.1:8002/oidc/op/", "http://stage-pedercini.intranet.athesys.it:8002/oidc/op/"],
+    cie: ["http://stage-pedercini.intranet.athesys.it:8002/oidc/op/", "http://127.0.0.1:8002/oidc/op/"],
   },
   public_jwks_path: "./public.jwks.json",
   private_jwks_path: "./private.jwks.json",
@@ -84,7 +84,15 @@ app.get("/oidc/rp/providers", async (req, res) => {
   try {
     res.json(await relyingParty.retrieveAvailableProviders());
   } catch (error) {
-    res.status(500).json(error);
+    if (error instanceof Error){
+      const errMessage = {
+        "error": "server_error",
+        "error_decription": error.message
+      };
+      res.status(500).json(errMessage);
+    } else {
+      res.status(500).json(error);
+    }
   }
 });
 
@@ -101,7 +109,15 @@ app.get("/oidc/rp/authorization", async (req, res) => {
       )
     );
   } catch (error) {
-    res.status(500).json(error);
+    if (error instanceof Error){
+      const errMessage = {
+        "error": "server_error",
+        "error_decription": error.message
+      };
+      res.status(500).json(errMessage);
+    } else {
+      res.status(500).json(error);
+    }
   }
 });
 
@@ -129,7 +145,15 @@ app.get("/oidc/rp/callback", async (req, res) => {
       }
     }
   } catch (error) {
-    res.status(500).json(error);
+    if (error instanceof Error){
+      const errMessage = {
+        "error": "server_error",
+        "error_decription": error.message
+      };
+      res.status(500).json(errMessage);
+    } else {
+      res.status(500).json(error);
+    }
   }
 });
 
@@ -147,7 +171,15 @@ app.get("/oidc/rp/revocation", async (req, res) => {
       });
     }
   } catch (error) {
-    res.status(500).json(error);
+    if (error instanceof Error){
+      const errMessage = {
+        "error": "server_error",
+        "error_decription": error.message
+      };
+      res.status(500).json(errMessage);
+    } else {
+      res.status(500).json(error);
+    }
   }
 });
 
@@ -177,8 +209,10 @@ app.get("/oidc/rp/resolve", async (req, res) => {
   }
 });
 
-app.post("/try", async (req, res) => {
-  res.send("ciao");
+app.get("/try", async (req, res) => {
+  const url = "http://stage-pedercini.intranet.athesys.it:8000/admin";
+  const response = await axios.get(url);
+  res.sendStatus(response.status);
 })
 
 
@@ -194,7 +228,15 @@ app.get("/oidc/rp/.well-known/openid-federation", async (req, res) => {
     res.set("Content-Type", response.headers["Content-Type"]);
     res.send(response.body);
   } catch (error) {
-    res.status(500).json(error);
+    if (error instanceof Error){
+      const errMessage = {
+        "error": "server_error",
+        "error_decription": error.message
+      };
+      res.status(500).json(errMessage);
+    } else {
+      res.status(500).json(error);
+    }
   }
 });
 
