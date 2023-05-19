@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.css": "/static/css/main.41e1c06f.css",
+    "main.js": "/static/js/main.dd81f026.js",
+    "static/js/787.cda612ba.chunk.js": "/static/js/787.cda612ba.chunk.js",
+    "static/media/sprite.svg": "/static/media/sprite.0812a51b0ef61bbe6783476df37e2a04.svg",
+    "static/media/spid-logo.svg": "/static/media/spid-logo.5a87a9aa45f2d1ae12eaca4f15b18a41.svg",
+    "static/media/cie-ico-circle-bb.svg": "/static/media/cie-ico-circle-bb.b74c7c23e5302a2705543b6c82502379.svg",
+    "static/media/spid-ico-circle-bb.svg": "/static/media/spid-ico-circle-bb.9abc7ee7e0b3c438121d0453dd646e82.svg",
+    "index.html": "/index.html",
+    "main.41e1c06f.css.map": "/static/css/main.41e1c06f.css.map",
+    "main.dd81f026.js.map": "/static/js/main.dd81f026.js.map",
+    "787.cda612ba.chunk.js.map": "/static/js/787.cda612ba.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.41e1c06f.css",
+    "static/js/main.dd81f026.js"
+  ]
+}
