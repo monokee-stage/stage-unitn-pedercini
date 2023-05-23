@@ -34,6 +34,7 @@ async function getAndVerifyTrustChain(
     identity_provider,
     validateIdentityProviderEntityConfiguration
   );
+  
 
   //  get the Entity Configuration of the Trust Anchor and validate
   const trust_anchor_entity_configuration = await getEntityConfiguration(
@@ -41,6 +42,7 @@ async function getAndVerifyTrustChain(
     trust_anchor,
     validateTrustAnchorEntityConfiguration
   );
+  
 
   //  get the Entity Statement of the TA about the RP
   const relying_party_entity_statement = await getEntityStatement(
@@ -48,6 +50,7 @@ async function getAndVerifyTrustChain(
     relying_party_entity_configuration,
     trust_anchor_entity_configuration
   );
+  
 
   // get the Entity Statement of the TA about the OP
   const identity_provider_entity_statement = await getEntityStatement(
@@ -55,6 +58,7 @@ async function getAndVerifyTrustChain(
     identity_provider_entity_configuration,
     trust_anchor_entity_configuration
   );
+  
 
   //  Calculate the minimum expiration time of the statement objects
   const exp = Math.min(relying_party_entity_statement.exp, identity_provider_entity_statement.exp);
@@ -434,6 +438,7 @@ const relyingPartyEntityConfigurationSchema: JSONSchemaType<RelyingPartyEntityCo
             application_type: { type: "string" },
             contacts: { type: "array", items: { type: "string" }, nullable: true },
             subject_type: { type: "string" },
+            aud: { type: "string"},
             jwks: jwksSchema,
             grant_types: { type: "array", items: { type: "string" } },
             response_types: { type: "array", items: { type: "string" } },

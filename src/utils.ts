@@ -2,17 +2,33 @@ import crypto from "crypto";
 import * as fs from "fs";
 import * as jose from "jose";
 import * as uuid from "uuid";
-import * as undici from "undici";
+//import * as undici from "undici";
 import Ajv from "ajv";
 import { Configuration, JWKs } from "./configuration";
+const { subtle } = crypto.webcrypto;
+import { KeyObject } from "crypto";
 
 export async function createJWS<Payload extends jose.JWTPayload>(payload: Payload, jwk: jose.JWK, typ?: string) {
   const privateKey = await jose.importJWK(jwk, inferAlgForJWK(jwk));
   const jws = await new jose.CompactSign(new TextEncoder().encode(JSON.stringify(payload)))
-    .setProtectedHeader({ alg: "RS256", kid: jwk.kid, typ: typ})
+    .setProtectedHeader({ alg: "RS256", kid: jwk.kid, typ: typ, jku: "https://pedercini1.stage.athesys.it/jwks"})
     .sign(privateKey);
   return jws;
 }
+
+export async function jwkToPem(webKey: JsonWebKey): Promise<string> {
+  const cryptoKey = await subtle.importKey(
+  "jwk",
+  webKey,
+  { hash: 'SHA-256', name: 'RSA-OAEP' },
+  true,
+  []
+  );
+  
+  return KeyObject.from(cryptoKey).export({ format: "pem", type: "pkcs1"}).toString();
+}
+
+
 
 export async function verifyJWS(jws: string, public_jwks: JWKs) {
   const { payload } = await jose.compactVerify(jws, async (header) => {

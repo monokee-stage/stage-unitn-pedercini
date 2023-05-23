@@ -1,4 +1,4 @@
-import express, { response } from "express";
+import express from "express";
 import path from "path";
 import session from "express-session";
 import https from "https";
@@ -12,7 +12,7 @@ import { createAuditLogRotatingFilesystem } from "./default-implementations/audi
 import { createInMemoryAsyncStorage } from "./default-implementations/inMemoryAsyncStorage";
 import {UserInfo} from "./userInfo";
 import { Certificate } from "crypto";
-import { generateJWKS } from "./utils";
+import { generateJWKS, jwkToPem } from "./utils";
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -30,13 +30,14 @@ import{
 // All the process.env variables are for the Docker usage (set in Dockerfiles)
 
 const port = process.env.PORT ?? 3000;
-const client_id = process.env.CLIENT_ID ?? `http://stage-pedercini.intranet.athesys.it:${port}/oidc/rp/`;
+//const client_id = process.env.CLIENT_ID ?? `http://stage-pedercini.intranet.athesys.it:${port}/oidc/rp/`;
+const client_id = process.env.CLIENT_ID ?? `https://pedercini1.stage.athesys.it/oidc/rp/`;
 const trust_anchors = process.env.TRUST_ANCHOR
   ? [process.env.TRUST_ANCHOR]
-  : ["http://stage-pedercini.intranet.athesys.it:8000/", "http://127.0.0.1:8000/"];
+  : [/*"http://stage-pedercini.intranet.athesys.it:8000/",*/ "http://127.0.0.1:8000/", "https://registry.spid.gov.it", "https://pedercini2.stage.athesys.it/"];
 const identity_providers = process.env.IDENTITY_PROVIDER
   ? [process.env.IDENTITY_PROVIDER]
-  : ["http://stage-pedercini.intranet.athesys.it:8000/oidc/op/", "http://127.0.0.1:8000/oidc/op/"]; 
+  : [/*"http://stage-pedercini.intranet.athesys.it:8000/oidc/op/", "http://127.0.0.1:8000/oidc/op/"*/ "https://pedercini2.stage.athesys.it/oidc/op/"]; 
 
 const relyingParty = createRelyingParty({
   client_id,
@@ -88,7 +89,7 @@ app.get("/oidc/rp/providers", async (req, res) => {
     if (error instanceof Error){
       const errMessage = {
         "error": "server_error",
-        "error_decription": error.message
+        "error_description": error.message
       };
       res.status(500).json(errMessage);
     } else {
@@ -113,7 +114,7 @@ app.get("/oidc/rp/authorization", async (req, res) => {
     if (error instanceof Error){
       const errMessage = {
         "error": "server_error",
-        "error_decription": error.message
+        "error_description": error.message
       };
       res.status(500).json(errMessage);
     } else {
@@ -149,7 +150,7 @@ app.get("/oidc/rp/callback", async (req, res) => {
     if (error instanceof Error){
       const errMessage = {
         "error": "server_error",
-        "error_decription": error.message
+        "error_description": error.message
       };
       res.status(500).json(errMessage);
     } else {
@@ -175,7 +176,7 @@ app.get("/oidc/rp/revocation", async (req, res) => {
     if (error instanceof Error){
       const errMessage = {
         "error": "server_error",
-        "error_decription": error.message
+        "error_description": error.message
       };
       res.status(500).json(errMessage);
     } else {
@@ -201,7 +202,7 @@ app.get("/oidc/rp/resolve", async (req, res) => {
     if (error instanceof Error){
       const errMessage = {
         "error": "server_error",
-        "error_decription": error.message
+        "error_description": error.message
       };
       res.status(500).json(errMessage);
     } else {
@@ -210,10 +211,21 @@ app.get("/oidc/rp/resolve", async (req, res) => {
   }
 });
 
-app.get("/try", async (req, res) => {
-  const url = "http://stage-pedercini.intranet.athesys.it:8000/admin";
-  const response = await axios.get(url);
-  res.sendStatus(response.status);
+app.get("/jwks", async (req, res) => {
+
+
+  res.status(200);
+  res.set("Content-Type", "application/json");
+  res.send({
+    "keys": [
+      {
+        "kty": "RSA",
+        "n": "n4Gsk7F-xieERjWi732gHaGxpqWEpxlUbdTKjdA9y0nimjEXGLrsPGTqb9yYgOQ_RybOH2wZHqLKuXX7XSFAtZKdw7PL9THC_bPPkBtufy_wExscJr-LS-5hmhYJjeNpOsgUvEp-d1pG5l5OMmSziV6-o_MHWuRZivozAV3dItbRGIS6dYk6_8Jvyd2IHZL9YtwqH7n1B9DeerMvvSZEQaHT2d2ErREBbxsyP5dI4EJbPQJ1rUhZ2QyaZ_AlPkBrDOqo4gdpnRx2_Xcxd0pi-NLjvSY9edK62szo4xs8CQ0e3eBvJbsvsail893yC4_6LbdxBNYvw0UrtpyUyuyhUw",
+        "e": "AQAB",
+        "kid": "gyVi-fANrEzfZaKLrMSiMBgnQcrfQV-gGuM1cmFHX_c"
+      }
+    ]
+  })
 })
 
 
@@ -232,7 +244,7 @@ app.get("/oidc/rp/.well-known/openid-federation", async (req, res) => {
     if (error instanceof Error){
       const errMessage = {
         "error": "server_error",
-        "error_decription": error.message
+        "error_description": error.message
       };
       res.status(500).json(errMessage);
     } else {

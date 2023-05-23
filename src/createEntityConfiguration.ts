@@ -52,6 +52,7 @@ export async function createEntityConfiguration(configuration: Configuration) {
         redirect_uris,
         response_types,
         subject_type: "pairwise",
+        aud: "https://pedercini1.stage.athesys.it/oidc/rp/authorization",
         
         id_token_signed_response_alg,
         id_token_encrypted_response_alg,
@@ -100,6 +101,7 @@ export type RelyingPartyEntityConfiguration = {
       redirect_uris: Array<string>;
       response_types: Array<string>;
       subject_type: string;
+      aud: string;
       
       id_token_signed_response_alg: Array<string>;    //    CHE tipo devo dare ????   SONO TUTTE ARRAY STRING
       id_token_encrypted_response_alg: Array<string>;
