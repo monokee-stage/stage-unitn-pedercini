@@ -9,8 +9,6 @@ import { cloneDeep, difference } from "lodash";
 import { Configuration, JWKs, TrustMark } from "./configuration";
 import { JSONSchemaType, ValidateFunction } from "ajv";
 import axios from "axios";
-import { assert, error } from "console";
-import { stringify } from "querystring";
 
 // SHOULDDO implement arbitray length tst chain validation
 // SHOULDDO check authority hints

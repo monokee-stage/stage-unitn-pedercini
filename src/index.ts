@@ -3,7 +3,6 @@ import path from "path";
 import session from "express-session";
 import https from "https";
 import fs from "fs";
-import axios from "axios";
 
 import {createRelyingParty} from "./createRelyingParty"
 import {Tokens} from "./revokeAccessToken"
@@ -11,7 +10,6 @@ import { createLogRotatingFilesystem } from "./default-implementations/logRotati
 import { createAuditLogRotatingFilesystem } from "./default-implementations/auditLogRotatingFilesystem";
 import { createInMemoryAsyncStorage } from "./default-implementations/inMemoryAsyncStorage";
 import {UserInfo} from "./userInfo";
-import { Certificate } from "crypto";
 import { generateJWKS, jwkToPem } from "./utils";
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -301,13 +299,13 @@ app.get("*", (req, res) =>
   res.sendFile(path.resolve("frontend/src/index.html"))
 );
 
-
+/*
 app.listen(port, () => {
   console.log(`Open browser at http://127.0.0.1:${port}`);
 });
+*/
 
 
-/*
 https.createServer(
   {
       key: fs.readFileSync("Certificato/privkey1.pem"),
@@ -316,4 +314,4 @@ https.createServer(
   app).listen(3000, () => {
   console.log("server running on port 3000")
 });
-*/
+
