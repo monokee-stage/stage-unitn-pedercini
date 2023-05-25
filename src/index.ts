@@ -30,14 +30,14 @@ import{
 // All the process.env variables are for the Docker usage (set in Dockerfiles)
 
 const port = process.env.PORT ?? 3000;
-//const client_id = process.env.CLIENT_ID ?? `http://stage-pedercini.intranet.athesys.it:${port}/oidc/rp/`;
-const client_id = process.env.CLIENT_ID ?? `https://pedercini1.stage.athesys.it/oidc/rp/`;
+const client_id = process.env.CLIENT_ID ?? `http://stage-pedercini.intranet.athesys.it:${port}/oidc/rp/`;
+//const client_id = process.env.CLIENT_ID ?? `https://pedercini1.stage.athesys.it/oidc/rp/`;
 const trust_anchors = process.env.TRUST_ANCHOR
   ? [process.env.TRUST_ANCHOR]
-  : [/*"http://stage-pedercini.intranet.athesys.it:8000/",*/ "http://127.0.0.1:8000/", "https://registry.spid.gov.it", "https://pedercini2.stage.athesys.it/"];
+  : ["http://stage-pedercini.intranet.athesys.it:8000/", "http://127.0.0.1:8000/", "https://registry.spid.gov.it"/*, "http://pedercini2.stage.athesys.it/"*/];
 const identity_providers = process.env.IDENTITY_PROVIDER
   ? [process.env.IDENTITY_PROVIDER]
-  : [/*"http://stage-pedercini.intranet.athesys.it:8000/oidc/op/", "http://127.0.0.1:8000/oidc/op/"*/ "https://pedercini2.stage.athesys.it/oidc/op/"]; 
+  : ["http://stage-pedercini.intranet.athesys.it:8000/oidc/op/", "http://127.0.0.1:8000/oidc/op/", /*"http://pedercini2.stage.athesys.it/oidc/op/"*/]; 
 
 const relyingParty = createRelyingParty({
   client_id,
@@ -85,6 +85,22 @@ declare module "express-session" {
 app.get("/oidc/rp/providers", async (req, res) => {
   try {
     res.json(await relyingParty.retrieveAvailableProviders());
+  } catch (error) {
+    if (error instanceof Error){
+      const errMessage = {
+        "error": "server_error",
+        "error_description": error.message
+      };
+      res.status(500).json(errMessage);
+    } else {
+      res.status(500).json(error);
+    }
+  }
+});
+
+app.get("/oidc/rp/providersList", async (req, res) => {
+  try {
+    res.json(await relyingParty.retrieveAvailableProvidersWithList());
   } catch (error) {
     if (error instanceof Error){
       const errMessage = {

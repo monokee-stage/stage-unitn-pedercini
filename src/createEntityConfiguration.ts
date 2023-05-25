@@ -20,13 +20,13 @@ export async function createEntityConfiguration(configuration: Configuration) {
   const response_types = configuration.response_types;
   const federation_jwks = configuration.federation_public_jwks;   //  Can be taken from somewhere else
 
-  const id_token_signed_response_alg = ["RS256"];
-  const id_token_encrypted_response_alg = ["RSA-OAEP-256"];
-  const id_token_encrypted_response_enc = ["A128CBC-HS256"];
-  const userinfo_signed_response_alg = ["RS256"];
-  const userinfo_encrypted_response_alg = ["RSA-OAEP-256"];
-  const userinfo_encrypted_response_enc = ["A128CBC-HS256"];
-  const token_endpoint_auth_method = ["private_key_jwt"];
+  const id_token_signed_response_alg = "RS256";
+  const id_token_encrypted_response_alg = "RSA-OAEP-256";
+  const id_token_encrypted_response_enc = "A128CBC-HS256";
+  const userinfo_signed_response_alg = "RS256";
+  const userinfo_encrypted_response_alg = "RSA-OAEP-256";
+  const userinfo_encrypted_response_enc = "A128CBC-HS256";
+  const token_endpoint_auth_method = "private_key_jwt";
 
   const organization_name = client_name;
   const homepage_uri = configuration.homepage_uri;
@@ -103,13 +103,13 @@ export type RelyingPartyEntityConfiguration = {
       subject_type: string;
       aud: string;
       
-      id_token_signed_response_alg: Array<string>;    //    CHE tipo devo dare ????   SONO TUTTE ARRAY STRING
-      id_token_encrypted_response_alg: Array<string>;
-      id_token_encrypted_response_enc: Array<string>;
-      userinfo_signed_response_alg: Array<string>;
-      userinfo_encrypted_response_alg: Array<string>;
-      userinfo_encrypted_response_enc: Array<string>;
-      token_endpoint_auth_method: Array<string>;
+      id_token_signed_response_alg: string;    //    CHE tipo devo dare ????   SONO TUTTE ARRAY STRING
+      id_token_encrypted_response_alg: string;
+      id_token_encrypted_response_enc: string;
+      userinfo_signed_response_alg: string;
+      userinfo_encrypted_response_alg: string;
+      userinfo_encrypted_response_enc: string;
+      token_endpoint_auth_method: string;
       
     },
     federation_entity: {      // ADDED

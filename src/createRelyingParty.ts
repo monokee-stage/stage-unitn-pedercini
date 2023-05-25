@@ -8,10 +8,11 @@ import {
 } from "./configuration";
 import { createEntityConfiguration } from "./createEntityConfiguration";
 import { revokeAccessToken, Tokens } from "./revokeAccessToken";
-import { getTrustChain } from "./getTrustChain";
+import { getProvidersList, getTrustChain } from "./getTrustChain";
 import { requestUserInfo } from "./requestUserInfo";
 import { isString, isUndefined } from "./utils";
 import { resolveSubject} from "./getTrustChain";
+import axios from "axios";
 
 export function createRelyingParty(configurationFacade: ConfigurationFacadeOptions) {
   let _configuration: Configuration | null = null;
@@ -36,6 +37,8 @@ export function createRelyingParty(configurationFacade: ConfigurationFacadeOptio
     async getConfiguration() {
       return await setupConfiguration();
     },
+
+    // default function, retrieve Providers from a local list with the providers client_ids
 
     async retrieveAvailableProviders(): Promise<
       Record<
@@ -62,18 +65,84 @@ export function createRelyingParty(configurationFacade: ConfigurationFacadeOptio
             logo_uri: trustChain.entity_configuration.metadata?.openid_provider?.logo_uri,
           };
         };
-        return Object.fromEntries(
+        const entries = Object.fromEntries(
           await Promise.all(
             Object.entries(configuration.identity_providers).map(async ([providerProfile, providers]) => {
               return [providerProfile, (await Promise.all(providers.map(getProviderInfo))).filter(Boolean)];
             })
           )
         );
+        return entries;
       } catch (error) {
         configuration.logger.error(error);
         throw error;
       }
     },
+
+    // Function to obtain the list of Providers by a GET request to the trust_anchor listing endpoint
+    
+    async retrieveAvailableProvidersWithList(): Promise<
+    Record<
+      string,
+      Array<{
+        sub: string;
+        organization_name: string;
+        logo_uri?: string;
+      }>
+    >
+  > {
+      const configuration = await setupConfiguration();
+
+      try {
+
+        // Function to get the information about a provider (cliet_id, logo, name)
+        const getProviderInfo = async (provider: string) => {
+          const trustChain = await getTrustChain(configuration, provider);
+          if (!trustChain) return null;
+          return {
+            sub: trustChain.entity_configuration.sub,
+            organization_name: trustChain.entity_configuration.metadata?.openid_provider?.organization_name,
+            logo_uri: trustChain.entity_configuration.metadata?.openid_provider?.logo_uri,
+          };
+        };
+        
+        // List of SPID providers from the TA listing endpoint
+        const spid_providers = await getProvidersList(configuration, configuration.trust_anchors[1]);
+        const spid_providers_info: Array<{sub: string; organization_name: string; logo_uri?: string}> = []; // solo per SPID providers
+
+        for (const prov of spid_providers){                      
+          const prov_info = await getProviderInfo(prov);
+          if (prov_info){
+            spid_providers_info[spid_providers_info.length] = prov_info;
+          }
+        }
+
+        // List of CIE providers from a local Array (CIE provider is one)
+        const cie_providers = configuration.identity_providers["cie"];
+        const cie_providers_info: Array<{sub: string; organization_name: string; logo_uri?: string}> = []; // CIE provider
+
+        for (const prov of cie_providers){                      
+          const prov_info = await getProviderInfo(prov);
+          if (prov_info){
+            cie_providers_info[cie_providers_info.length] = prov_info;
+          }
+        }
+
+        // JSON Object with the SPID + CIE providers
+        // In this simulation TA has also the CIE Provider in his descendants so it si shown. In real life, Agid Trust Anchor will hve only SPID providers in his entity listing
+        const result = {
+          "spid": spid_providers_info,
+          "cie": cie_providers_info  
+        }
+
+        return result;
+        
+      } catch (error){
+        configuration.logger.error(error);
+        throw error;
+      }
+    },
+
 
     async createEntityConfigurationResponse() {
       const configuration = await setupConfiguration();

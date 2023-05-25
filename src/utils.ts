@@ -11,7 +11,7 @@ import { KeyObject } from "crypto";
 export async function createJWS<Payload extends jose.JWTPayload>(payload: Payload, jwk: jose.JWK, typ?: string) {
   const privateKey = await jose.importJWK(jwk, inferAlgForJWK(jwk));
   const jws = await new jose.CompactSign(new TextEncoder().encode(JSON.stringify(payload)))
-    .setProtectedHeader({ alg: "RS256", kid: jwk.kid, typ: typ, jku: "https://pedercini1.stage.athesys.it/jwks"})
+    .setProtectedHeader({ alg: "RS256", kid: jwk.kid, typ: typ, x5u: "https://pedercini1.stage.athesys.it/jwks", jku: "https://pedercini1.stage.athesys.it/jwks"})
     .sign(privateKey);
   return jws;
 }

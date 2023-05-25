@@ -388,7 +388,45 @@ export async function verifyTrustMarks(configuration: Configuration, sub_entity_
   }
 }
 
+export async function getProvidersList(configuration: Configuration, trust_anchor: string){
+  const ta_configuration = await getEntityConfiguration(configuration, trust_anchor, validateTrustAnchorEntityConfiguration);
 
+  const response = await axios.get(ta_configuration.metadata.federation_entity.federation_list_endpoint);
+  const ta_descendants = response.data;   // Array of TA descendants
+  /*
+  for (const desc in ta_descendants){
+    try{
+      const conf = await getEntityConfiguration(configuration, desc, validateIdentityProviderEntityConfiguration);
+      providers[providers.length] = desc;
+
+      
+
+
+    } catch(error){
+      configuration.logger.error(error);
+    }
+  }*/
+  const getProviders = async (ta_descendants: string[]) => {
+    const providers: string[] = [];
+
+    for (const desc of ta_descendants){
+      try {
+        const conf = await getEntityConfiguration(configuration, desc, validateIdentityProviderEntityConfiguration);
+        providers[providers.length] = desc;
+      } catch (error){
+        configuration.logger.error(error);
+      }
+    }
+    return providers;
+  }
+  
+
+  return await getProviders(ta_descendants);
+  /*
+  for (const desc in Object.entries(ta_descendants)){
+    const conf = await getEntityConfiguration
+  }*/
+}
 
 
 const jwksSchema: JSONSchemaType<JWKs> = {
@@ -445,13 +483,13 @@ const relyingPartyEntityConfigurationSchema: JSONSchemaType<RelyingPartyEntityCo
             redirect_uris: { type: "array", items: { type: "string" } },
             client_registration_types: { type: "array", items: { type: "string" } },
 
-            id_token_signed_response_alg: { type: "array", items: { type: "string" } },
-            id_token_encrypted_response_alg: { type: "array", items: { type: "string" } },
-            id_token_encrypted_response_enc: { type: "array", items: { type: "string" } },
-            userinfo_signed_response_alg: { type: "array", items: { type: "string" } },
-            userinfo_encrypted_response_alg: { type: "array", items: { type: "string" } },
-            userinfo_encrypted_response_enc: { type: "array", items: { type: "string" } },
-            token_endpoint_auth_method: { type: "array", items: { type: "string" } },
+            id_token_signed_response_alg: { type: "string"},
+            id_token_encrypted_response_alg: { type: "string"},
+            id_token_encrypted_response_enc: { type: "string"},
+            userinfo_signed_response_alg: { type: "string"},
+            userinfo_encrypted_response_alg: { type: "string"},
+            userinfo_encrypted_response_enc: { type: "string"},
+            token_endpoint_auth_method: { type: "string"},
 
           },
           required: [
@@ -591,3 +629,6 @@ export type ResolveResponse = {
   trust_marks?: Array<{ id: string; trust_mark: string }>;
   trust_chain?: Array<EntityStatement>;
 }
+
+
+
